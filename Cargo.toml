@@ -1,0 +1,13 @@
+[package]
+name = "peglrs"
+version = "0.1.0"
+authors = ["Maël NACCACHE <contact@maeln.com>"]
+edition = "2018"
+
+[features]
+verbose = []
+
+[dependencies]
+gl = "0.11.0"
+cgmath = "0.17.0"
+glutin = "0.19.0"
