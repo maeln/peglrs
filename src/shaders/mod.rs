@@ -22,6 +22,7 @@ pub struct Shader {
     pub shader_type: ShaderType,
 }
 
+#[derive(Debug)]
 pub struct Program {
     pub addr: u32,
     pub shader: Vec<Rc<Shader>>,

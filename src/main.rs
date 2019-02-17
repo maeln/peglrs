@@ -28,10 +28,7 @@ fn main() {
         events_loop.poll_events(|event| match event {
             glutin::Event::WindowEvent { event, .. } => match event {
                 glutin::WindowEvent::CloseRequested => running = false,
-                glutin::WindowEvent::KeyboardInput {
-                    device_id: _,
-                    input,
-                } => {
+                glutin::WindowEvent::KeyboardInput { input, .. } => {
                     if let Some(vkey) = input.virtual_keycode {
                         if vkey == glutin::VirtualKeyCode::Escape
                             && input.state == glutin::ElementState::Pressed

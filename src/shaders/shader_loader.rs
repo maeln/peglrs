@@ -53,17 +53,18 @@ pub fn load_shader(path: &Path) -> Option<Shader> {
 
         let mut status: i32 = 0;
         gl::GetShaderiv(addr, gl::COMPILE_STATUS, &mut status);
-        if status == gl::FALSE as i32 {
+        if status == i32::from(gl::FALSE) {
             #[cfg(feature = "debug")]
             {
                 let mut log_len: i32 = 0;
                 gl::GetShaderiv(addr, gl::INFO_LOG_LENGTH, &mut log_len);
-                let mut log: Vec<u8> = Vec::with_capacity(log_len + 1);
-                gl::GetShaderInfoLog(addr, log_len, ptr::null(), &mut log);
+                let mut log: Vec<u8> = Vec::with_capacity(log_len as usize);
+                gl::GetShaderInfoLog(addr, log_len, ptr::null_mut(), log.as_mut_ptr() as *mut i8);
+                log.set_len(log_len as usize);
                 eprintln!(
-                    "[ERR] Couldn't compile shader {}, log: {}",
+                    "[ERR] Couldn't compile shader {}, log:\n{}",
                     path.display(),
-                    String::from_utf8_lossy(&log)
+                    String::from_utf8_lossy(&log[..])
                 );
             }
 
@@ -71,10 +72,12 @@ pub fn load_shader(path: &Path) -> Option<Shader> {
         }
 
         Some(Shader {
-            addr: addr,
+            addr,
             path: String::from(path.to_str().unwrap()),
             uniforms: parse_uniforms(&src.to_string_lossy()),
             shader_type: shader_type.unwrap(),
         })
     }
 }
+
+// pub fn load_program
