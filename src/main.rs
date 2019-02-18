@@ -6,6 +6,7 @@ mod utils;
 
 use glutin::GlContext;
 use std::path::Path;
+use std::rc::Rc;
 
 fn main() {
     let mut events_loop = glutin::EventsLoop::new();
@@ -21,7 +22,10 @@ fn main() {
     }
 
     let shader = shaders::shader_loader::load_shader(Path::new("data/shaders/plane/plane.vs"));
-    println!("Shader {:?}", shader);
+    println!("{:?}", shader);
+
+    let program = shaders::shader_loader::load_program(&vec![Rc::new(shader.unwrap())]);
+    println!("{:?}", program);
 
     let mut running = true;
     while running {

@@ -25,8 +25,8 @@ pub struct Shader {
 #[derive(Debug)]
 pub struct Program {
     pub addr: u32,
-    pub shader: Vec<Rc<Shader>>,
-    pub uniforms_location: HashMap<String, u32>,
+    pub shaders: Vec<Rc<Shader>>,
+    pub uniforms_location: HashMap<String, i32>,
 }
 
 pub fn get_shader_type(path: &Path) -> Option<ShaderType> {

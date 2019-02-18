@@ -2,8 +2,10 @@ use crate::utils;
 use gl;
 use std::path::Path;
 
+use std::borrow::Borrow;
 use std::ffi::CString;
 use std::ptr;
+use std::rc::Rc;
 
 use super::*;
 
@@ -80,4 +82,55 @@ pub fn load_shader(path: &Path) -> Option<Shader> {
     }
 }
 
-// pub fn load_program
+pub fn load_program(shaders: &Vec<Rc<Shader>>) -> Option<Program> {
+    unsafe {
+        let addr = gl::CreateProgram();
+        for shader in shaders {
+            gl::AttachShader(addr, shader.addr);
+        }
+        gl::LinkProgram(addr);
+
+        let mut status: i32 = 0;
+        gl::GetProgramiv(addr, gl::LINK_STATUS, &mut status);
+        if status == i32::from(gl::FALSE) {
+            #[cfg(feature = "debug")]
+            {
+                let mut log_length: i32 = 0;
+                gl::GetProgramiv(addr, gl::INFO_LOG_LENGTH, &mut log_length);
+                let mut log: Vec<u8> = Vec::with_capacity(log_length as usize);
+                gl::GetProgramInfoLog(
+                    addr,
+                    log_length,
+                    ptr::null_mut(),
+                    log.as_mut_ptr() as *mut i8,
+                );
+                log.set_len(log_length as usize);
+                eprintln!(
+                    "[ERR] Couldn't link program, log:\n{}",
+                    String::from_utf8_lossy(&log[..])
+                );
+            }
+
+            return None;
+        }
+
+        let mut program = Program {
+            addr,
+            shaders: Vec::with_capacity(shaders.len()),
+            uniforms_location: HashMap::new(),
+        };
+
+        for shader in shaders.into_iter() {
+            gl::DetachShader(addr, shader.addr);
+            program.shaders.push(Rc::clone(shader));
+
+            for uniform in &shader.uniforms {
+                let uniform_cstr = CString::new(uniform.as_bytes()).unwrap();
+                let location = gl::GetUniformLocation(addr, uniform_cstr.as_ptr());
+                program.uniforms_location.insert(uniform.clone(), location);
+            }
+        }
+
+        Some(program)
+    }
+}

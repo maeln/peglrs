@@ -5,6 +5,7 @@ authors = ["Maël NACCACHE <contact@maeln.com>"]
 edition = "2018"
 
 [features]
+default = ["debug"]
 debug = []
 
 [dependencies]
