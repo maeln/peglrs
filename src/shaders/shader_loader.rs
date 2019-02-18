@@ -2,7 +2,6 @@ use crate::utils;
 use gl;
 use std::path::Path;
 
-use std::borrow::Borrow;
 use std::ffi::CString;
 use std::ptr;
 use std::rc::Rc;
