@@ -1,6 +1,7 @@
 extern crate gl;
 extern crate glutin;
 
+mod mesh;
 mod shaders;
 mod utils;
 
