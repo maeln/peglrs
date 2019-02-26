@@ -28,6 +28,10 @@ fn main() {
     let program = shaders::shader_loader::load_program(&vec![Rc::new(shader.unwrap())]);
     println!("{:?}", program);
 
+    let mut cube = mesh::Mesh::cube();
+    cube.ready_up(3, 3, 2);
+    println!("{:?}", cube);
+
     let mut running = true;
     while running {
         events_loop.poll_events(|event| match event {

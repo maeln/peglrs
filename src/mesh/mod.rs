@@ -151,6 +151,11 @@ impl Mesh {
         }
     }
 
+    pub fn ready_up(&mut self, vcomp: i32, ncomp: i32, uvcomp: i32) {
+        self.upload();
+        self.enable_attrib(vcomp, ncomp, uvcomp);
+    }
+
     pub fn cube() -> Mesh {
         Mesh {
             vertices: vec![
