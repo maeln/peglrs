@@ -29,8 +29,9 @@ fn main() {
     println!("{:?}", program);
 
     let mut cube = mesh::Mesh::cube();
-    cube.ready_up(3, 3, 2);
+    cube.ready_up();
     println!("{:?}", cube);
+    cube.draw();
 
     let mut running = true;
     while running {
