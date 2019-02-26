@@ -44,16 +44,53 @@ impl Mesh {
         }
     }
 
-    fn enable_attrib(&mut self) {
+    fn enable_attrib(&mut self, vcomp: i32, ncomp: i32, uvcomp: i32) {
         self.bind_vao();
 
-        if self.vbo_indices.is_some() {}
+        if self.vbo_indices.is_some() {
+            unsafe {
+                gl::BindBuffer(gl::ARRAY_BUFFER, self.vbo_vertices.unwrap());
+                gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, self.vbo_indices.unwrap());
+            }
+        } else {
+            unsafe {
+                gl::BindBuffer(gl::ARRAY_BUFFER, self.vbo_vertices.unwrap());
+            }
+        }
+
+        unsafe {
+            gl::EnableVertexAttribArray(0);
+            gl::VertexAttribPointer(0, vcomp, gl::FLOAT, gl::FALSE, 0, std::ptr::null_mut());
+        }
+
+        if self.vbo_normals.is_some() {
+            unsafe {
+                gl::BindBuffer(gl::ARRAY_BUFFER, self.vbo_normals.unwrap());
+                gl::EnableVertexAttribArray(1);
+                gl::VertexAttribPointer(1, ncomp, gl::FLOAT, gl::FALSE, 0, std::ptr::null_mut());
+            }
+        }
+
+        if self.vbo_uv.is_some() {
+            unsafe {
+                gl::BindBuffer(gl::ARRAY_BUFFER, self.vbo_uv.unwrap());
+                gl::EnableVertexAttribArray(2);
+                gl::VertexAttribPointer(2, uvcomp, gl::FLOAT, gl::FALSE, 0, std::ptr::null_mut());
+            }
+        }
+
+        unsafe {
+            gl::BindBuffer(gl::ARRAY_BUFFER, 0);
+            gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, 0);
+        }
+
+        self.free_vao();
     }
 
-    fn upload(&mut self, vert_comp: u32, norms_comp: u32, uv_comp: u32) {
-        unsafe {
-            if self.vbo_vertices.is_none() {
-                self.vbo_vertices = gen_vbo();
+    fn upload(&mut self) {
+        if self.vbo_vertices.is_none() {
+            self.vbo_vertices = gen_vbo();
+            unsafe {
                 gl::BindBuffer(gl::ARRAY_BUFFER, self.vbo_vertices.unwrap());
                 gl::BufferData(
                     gl::ARRAY_BUFFER,
@@ -62,10 +99,12 @@ impl Mesh {
                     gl::STATIC_DRAW,
                 );
             }
+        }
 
-            if self.vbo_indices.is_none() {
-                if let Some(ind) = &mut self.indices {
-                    self.vbo_indices = gen_vbo();
+        if self.vbo_indices.is_none() {
+            if let Some(ind) = &mut self.indices {
+                self.vbo_indices = gen_vbo();
+                unsafe {
                     gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, self.vbo_indices.unwrap());
                     gl::BufferData(
                         gl::ELEMENT_ARRAY_BUFFER,
@@ -75,10 +114,12 @@ impl Mesh {
                     );
                 }
             }
+        }
 
-            if self.vbo_normals.is_none() {
-                if let Some(norms) = &mut self.normals {
-                    self.vbo_normals = gen_vbo();
+        if self.vbo_normals.is_none() {
+            if let Some(norms) = &mut self.normals {
+                self.vbo_normals = gen_vbo();
+                unsafe {
                     gl::BindBuffer(gl::ARRAY_BUFFER, self.vbo_normals.unwrap());
                     gl::BufferData(
                         gl::ARRAY_BUFFER,
@@ -88,10 +129,12 @@ impl Mesh {
                     );
                 }
             }
+        }
 
-            if self.vbo_uv.is_none() {
-                if let Some(uv) = &mut self.uv {
-                    self.vbo_uv = gen_vbo();
+        if self.vbo_uv.is_none() {
+            if let Some(uv) = &mut self.uv {
+                self.vbo_uv = gen_vbo();
+                unsafe {
                     gl::BindBuffer(gl::ARRAY_BUFFER, self.vbo_uv.unwrap());
                     gl::BufferData(
                         gl::ARRAY_BUFFER,
@@ -101,7 +144,8 @@ impl Mesh {
                     );
                 }
             }
-
+        }
+        unsafe {
             gl::BindBuffer(gl::ARRAY_BUFFER, 0);
             gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, 0);
         }
