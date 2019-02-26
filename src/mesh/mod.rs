@@ -4,10 +4,10 @@ use std::os::raw::c_void;
 
 #[derive(Debug)]
 pub struct Mesh {
-    pub vertices: Vec<f64>,
+    pub vertices: Vec<f32>,
     pub indices: Option<Vec<u32>>,
-    pub normals: Option<Vec<f64>>,
-    pub uv: Option<Vec<f64>>,
+    pub normals: Option<Vec<f32>>,
+    pub uv: Option<Vec<f32>>,
 
     pub vbo_vertices: Option<u32>,
     pub vbo_indices: Option<u32>,
@@ -25,7 +25,7 @@ fn gen_vbo() -> Option<u32> {
 }
 
 impl Mesh {
-    pub fn upload(&mut self) {
+    fn bind_vao(&mut self) {
         if self.vao.is_none() {
             let mut vao_addr: u32 = 0;
             unsafe {
@@ -33,20 +33,63 @@ impl Mesh {
             }
             self.vao = Some(vao_addr);
         }
-
         unsafe {
             gl::BindVertexArray(self.vao.unwrap());
+        }
+    }
 
+    fn free_vao(&self) {
+        unsafe {
+            gl::BindVertexArray(0);
+        }
+    }
+
+    fn upload(&mut self, vert_comp: u32, norms_comp: u32, uv_comp: u32) {
+        unsafe {
             self.vbo_vertices = self.vbo_vertices.or_else(gen_vbo);
             gl::BindBuffer(gl::ARRAY_BUFFER, self.vbo_vertices.unwrap());
             gl::BufferData(
                 gl::ARRAY_BUFFER,
-                (std::mem::size_of::<f64>() * self.vertices.len()) as isize,
+                (std::mem::size_of::<f32>() * self.vertices.len()) as isize,
                 self.vertices.as_mut_ptr() as *const c_void,
                 gl::STATIC_DRAW,
             );
 
-            // TODO: Other vbo + attrib pointer
+            if let Some(ind) = &mut self.indices {
+                self.vbo_indices = self.vbo_indices.or_else(gen_vbo);
+                gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, self.vbo_indices.unwrap());
+                gl::BufferData(
+                    gl::ELEMENT_ARRAY_BUFFER,
+                    (std::mem::size_of::<u32>() * ind.len()) as isize,
+                    ind.as_mut_ptr() as *const c_void,
+                    gl::STATIC_DRAW,
+                );
+            }
+
+            if let Some(norms) = &mut self.normals {
+                self.vbo_normals = self.vbo_normals.or_else(gen_vbo);
+                gl::BindBuffer(gl::ARRAY_BUFFER, self.vbo_normals.unwrap());
+                gl::BufferData(
+                    gl::ARRAY_BUFFER,
+                    (std::mem::size_of::<f32>() * norms.len()) as isize,
+                    norms.as_mut_ptr() as *const c_void,
+                    gl::STATIC_DRAW,
+                );
+            }
+
+            if let Some(uv) = &mut self.uv {
+                self.vbo_uv = self.vbo_uv.or_else(gen_vbo);
+                gl::BindBuffer(gl::ARRAY_BUFFER, self.vbo_uv.unwrap());
+                gl::BufferData(
+                    gl::ARRAY_BUFFER,
+                    (std::mem::size_of::<f32>() * uv.len()) as isize,
+                    uv.as_mut_ptr() as *const c_void,
+                    gl::STATIC_DRAW,
+                );
+            }
+
+            gl::BindBuffer(gl::ARRAY_BUFFER, 0);
+            gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, 0);
         }
     }
 
