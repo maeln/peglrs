@@ -31,6 +31,16 @@ fn main() {
         gl::load_with(|symbol| gl_window.get_proc_address(symbol) as *const _);
     }
 
+    unsafe {
+        gl::Enable(gl::DEPTH_TEST);
+        gl::DepthMask(gl::TRUE);
+        gl::DepthFunc(gl::LEQUAL);
+        gl::DepthRange(0.0, 1.0);
+        gl::Enable(gl::DEPTH_CLAMP);
+        gl::Enable(gl::BLEND);
+        gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
+    }
+
     let vertex_shader = Shader::load_shader(Path::new("data/shaders/basic/projection.vs"));
     let pixel_shader = Shader::load_shader(Path::new("data/shaders/basic/phong/phong.fs"));
 
