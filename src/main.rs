@@ -5,6 +5,7 @@ extern crate glutin;
 mod camera;
 mod frame;
 mod mesh;
+mod scene;
 mod shaders;
 mod utils;
 
