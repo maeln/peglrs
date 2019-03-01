@@ -68,42 +68,38 @@ fn main() {
     let mut mouse_delta: (f32, f32) = (0.0, 0.0);
     let mut mouse_pressed = false;
 
+    let mut directions: Vec<&Direction> = vec![];
+
     let mut running = true;
     while running {
         mouse_delta = (0.0, 0.0);
+        directions.clear();
         events_loop.poll_events(|event| match event {
             glutin::Event::WindowEvent { event, .. } => match event {
                 glutin::WindowEvent::CloseRequested => running = false,
                 glutin::WindowEvent::KeyboardInput { input, .. } => {
                     if let Some(vkey) = input.virtual_keycode {
-                        if vkey == glutin::VirtualKeyCode::Escape
-                            && input.state == glutin::ElementState::Pressed
-                        {
-                            running = false
-                        }
-
-                        if vkey == glutin::VirtualKeyCode::W
-                            && input.state == glutin::ElementState::Pressed
-                        {
-                            cam.move_cam(&Direction::FORWARD, dt);
-                        }
-
-                        if vkey == glutin::VirtualKeyCode::S
-                            && input.state == glutin::ElementState::Pressed
-                        {
-                            cam.move_cam(&Direction::BACKWARD, dt);
-                        }
-
-                        if vkey == glutin::VirtualKeyCode::A
-                            && input.state == glutin::ElementState::Pressed
-                        {
-                            cam.move_cam(&Direction::LEFT, dt);
-                        }
-
-                        if vkey == glutin::VirtualKeyCode::D
-                            && input.state == glutin::ElementState::Pressed
-                        {
-                            cam.move_cam(&Direction::RIGHT, dt);
+                        if input.state == glutin::ElementState::Pressed {
+                            match vkey {
+                                glutin::VirtualKeyCode::Escape => running = false,
+                                glutin::VirtualKeyCode::W => directions.push(&Direction::FORWARD),
+                                glutin::VirtualKeyCode::S => {
+                                    directions.push(&Direction::BACKWARD);
+                                }
+                                glutin::VirtualKeyCode::A => {
+                                    directions.push(&Direction::LEFT);
+                                }
+                                glutin::VirtualKeyCode::D => {
+                                    directions.push(&Direction::RIGHT);
+                                }
+                                glutin::VirtualKeyCode::Space => {
+                                    directions.push(&Direction::UP);
+                                }
+                                glutin::VirtualKeyCode::LShift => {
+                                    directions.push(&Direction::DOWN);
+                                }
+                                _ => {}
+                            }
                         }
                     }
                 }
@@ -133,6 +129,10 @@ fn main() {
 
         if mouse_pressed {
             cam.move_target(mouse_delta.0, mouse_delta.1, dt);
+        }
+
+        for direction in directions.iter() {
+            cam.move_cam(direction, dt);
         }
 
         unsafe {

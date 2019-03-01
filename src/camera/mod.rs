@@ -6,6 +6,8 @@ pub enum Direction {
     BACKWARD,
     LEFT,
     RIGHT,
+    UP,
+    DOWN,
 }
 
 #[derive(Debug)]
@@ -47,6 +49,8 @@ impl Camera {
             &Direction::BACKWARD => self.position = self.position - self.forward * vel,
             &Direction::LEFT => self.position = self.position - self.right * vel,
             &Direction::RIGHT => self.position = self.position + self.right * vel,
+            &Direction::UP => self.position = self.position + self.up * vel,
+            &Direction::DOWN => self.position = self.position - self.up * vel,
         }
     }
 
@@ -55,10 +59,11 @@ impl Camera {
         self.angle_h = self.angle_h + dx * vel;
         self.angle_v = self.angle_v + dy * vel;
 
+        let vcos = f32::cos(self.angle_v);
         self.forward = Vector3::new(
-            f32::cos(self.angle_v) * f32::sin(self.angle_h),
+            vcos * f32::sin(self.angle_h),
             f32::sin(self.angle_v),
-            f32::cos(self.angle_v) * f32::cos(self.angle_h),
+            vcos * f32::cos(self.angle_h),
         );
 
         self.right = self.forward.cross(self.world_up).normalize();

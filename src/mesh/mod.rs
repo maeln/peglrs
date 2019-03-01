@@ -1,6 +1,8 @@
 use gl;
 use std::os::raw::c_void;
 
+// Note: This should probably be a trait.
+
 #[derive(Debug)]
 pub struct Mesh {
     pub vertices: Vec<f32>,
