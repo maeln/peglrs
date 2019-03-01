@@ -3,6 +3,7 @@ extern crate gl;
 extern crate glutin;
 
 mod camera;
+mod frame;
 mod mesh;
 mod shaders;
 mod utils;
@@ -23,7 +24,7 @@ fn main() {
     let window = glutin::WindowBuilder::new()
         .with_title("Hello world!")
         .with_dimensions(glutin::dpi::LogicalSize::new(1024.0, 768.0));
-    let context = glutin::ContextBuilder::new();
+    let context = glutin::ContextBuilder::new().with_vsync(true);
     let gl_window = glutin::GlWindow::new(window, context, &events_loop).unwrap();
 
     unsafe {
@@ -62,7 +63,7 @@ fn main() {
     );
 
     let mut time = Instant::now();
-    let mut dt = 0.0;
+    let mut dt: f64 = 0.0;
 
     let mut mouse_pos: (f32, f32) = (0.0, 0.0);
     let mut mouse_delta: (f32, f32) = (0.0, 0.0);
@@ -128,11 +129,11 @@ fn main() {
         });
 
         if mouse_pressed {
-            cam.move_target(mouse_delta.0, mouse_delta.1, dt);
+            cam.move_target(mouse_delta.0, mouse_delta.1, dt as f32);
         }
 
         for direction in directions.iter() {
-            cam.move_cam(direction, dt);
+            cam.move_cam(direction, dt as f32);
         }
 
         unsafe {
@@ -153,7 +154,9 @@ fn main() {
 
         let end = Instant::now();
         let delta = end - time;
-        dt = (delta.subsec_millis() as f32) / 1000.0;
+        dt = (delta.as_micros() as f64) / 1000000.0;
+        let fps = 1.0 / dt;
+        print!("\r{:.8}", fps);
         time = end;
     }
 }

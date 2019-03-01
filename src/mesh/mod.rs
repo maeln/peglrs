@@ -30,6 +30,40 @@ fn gen_vbo() -> Option<u32> {
     Some(vbo_addr)
 }
 
+impl Drop for Mesh {
+    fn drop(&mut self) {
+        if self.vbo_vertices.is_some() {
+            unsafe {
+                gl::DeleteBuffers(1, &self.vbo_vertices.unwrap());
+            }
+        }
+
+        if self.vbo_indices.is_some() {
+            unsafe {
+                gl::DeleteBuffers(1, &self.vbo_indices.unwrap());
+            }
+        }
+
+        if self.vbo_normals.is_some() {
+            unsafe {
+                gl::DeleteBuffers(1, &self.vbo_normals.unwrap());
+            }
+        }
+
+        if self.vbo_uv.is_some() {
+            unsafe {
+                gl::DeleteBuffers(1, &self.vbo_uv.unwrap());
+            }
+        }
+
+        if self.vao.is_some() {
+            unsafe {
+                gl::DeleteVertexArrays(1, &self.vao.unwrap());
+            }
+        }
+    }
+}
+
 impl Mesh {
     fn bind_vao(&mut self) {
         if self.vao.is_none() {
