@@ -29,6 +29,22 @@ pub struct Program {
     pub uniforms_location: HashMap<String, i32>,
 }
 
+impl Drop for Shader {
+    fn drop(&mut self) {
+        unsafe {
+            gl::DeleteShader(self.addr);
+        }
+    }
+}
+
+impl Drop for Program {
+    fn drop(&mut self) {
+        unsafe {
+            gl::DeleteProgram(self.addr);
+        }
+    }
+}
+
 pub fn get_shader_type(path: &Path) -> Option<ShaderType> {
     let ext = path.extension().and_then(|extension| extension.to_str());
     match ext {
