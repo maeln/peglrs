@@ -10,6 +10,12 @@ pub enum Direction {
     DOWN,
 }
 
+impl PartialEq for Direction {
+    fn eq(&self, other: &Direction) -> bool {
+        self == other
+    }
+}
+
 #[derive(Debug)]
 pub struct Camera {
     pub position: Point3<f32>,

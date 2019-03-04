@@ -70,12 +70,11 @@ fn main() {
     let mut mouse_delta: (f32, f32) = (0.0, 0.0);
     let mut mouse_pressed = false;
 
-    let mut directions: Vec<&Direction> = vec![];
+    let mut dirs: Vec<Direction> = Vec::with_capacity(6);
 
     let mut running = true;
     while running {
         mouse_delta = (0.0, 0.0);
-        directions.clear();
         events_loop.poll_events(|event| match event {
             glutin::Event::WindowEvent { event, .. } => match event {
                 glutin::WindowEvent::CloseRequested => running = false,
@@ -84,21 +83,77 @@ fn main() {
                         if input.state == glutin::ElementState::Pressed {
                             match vkey {
                                 glutin::VirtualKeyCode::Escape => running = false,
-                                glutin::VirtualKeyCode::W => directions.push(&Direction::FORWARD),
+                                glutin::VirtualKeyCode::W => {
+                                    if !dirs.contains(&Direction::FORWARD) {
+                                        dirs.push(Direction::FORWARD);
+                                    }
+                                }
                                 glutin::VirtualKeyCode::S => {
-                                    directions.push(&Direction::BACKWARD);
+                                    if !dirs.contains(&Direction::BACKWARD) {
+                                        dirs.push(Direction::BACKWARD);
+                                    }
                                 }
                                 glutin::VirtualKeyCode::A => {
-                                    directions.push(&Direction::LEFT);
+                                    if !dirs.contains(&Direction::LEFT) {
+                                        dirs.push(Direction::LEFT);
+                                    }
                                 }
                                 glutin::VirtualKeyCode::D => {
-                                    directions.push(&Direction::RIGHT);
+                                    if !dirs.contains(&Direction::RIGHT) {
+                                        dirs.push(Direction::RIGHT);
+                                    }
                                 }
                                 glutin::VirtualKeyCode::Space => {
-                                    directions.push(&Direction::UP);
+                                    if !dirs.contains(&Direction::UP) {
+                                        dirs.push(Direction::UP);
+                                    }
                                 }
-                                glutin::VirtualKeyCode::LShift => {
-                                    directions.push(&Direction::DOWN);
+                                glutin::VirtualKeyCode::C => {
+                                    if !dirs.contains(&Direction::DOWN) {
+                                        dirs.push(Direction::DOWN);
+                                    }
+                                }
+                                _ => {}
+                            }
+                        } else if input.state == glutin::ElementState::Released {
+                            match vkey {
+                                glutin::VirtualKeyCode::W => {
+                                    if let Some(n) =
+                                        dirs.iter().position(|x| x == &Direction::FORWARD)
+                                    {
+                                        dirs.remove(n);
+                                    }
+                                }
+                                glutin::VirtualKeyCode::S => {
+                                    if let Some(n) =
+                                        dirs.iter().position(|x| x == &Direction::BACKWARD)
+                                    {
+                                        dirs.remove(n);
+                                    }
+                                }
+                                glutin::VirtualKeyCode::A => {
+                                    if let Some(n) = dirs.iter().position(|x| x == &Direction::LEFT)
+                                    {
+                                        dirs.remove(n);
+                                    }
+                                }
+                                glutin::VirtualKeyCode::D => {
+                                    if let Some(n) =
+                                        dirs.iter().position(|x| x == &Direction::RIGHT)
+                                    {
+                                        dirs.remove(n);
+                                    }
+                                }
+                                glutin::VirtualKeyCode::Space => {
+                                    if let Some(n) = dirs.iter().position(|x| x == &Direction::UP) {
+                                        dirs.remove(n);
+                                    }
+                                }
+                                glutin::VirtualKeyCode::C => {
+                                    if let Some(n) = dirs.iter().position(|x| x == &Direction::DOWN)
+                                    {
+                                        dirs.remove(n);
+                                    }
                                 }
                                 _ => {}
                             }
@@ -133,8 +188,8 @@ fn main() {
             cam.move_target(mouse_delta.0, mouse_delta.1, dt as f32);
         }
 
-        for direction in directions.iter() {
-            cam.move_cam(direction, dt as f32);
+        for dir in dirs.iter() {
+            cam.move_cam(&dir, dt as f32);
         }
 
         unsafe {
@@ -153,11 +208,10 @@ fn main() {
 
         gl_window.swap_buffers().unwrap();
 
-        let end = Instant::now();
-        let delta = end - time;
+        let delta = time.elapsed();
         dt = (delta.as_micros() as f64) / 1000000.0;
         let fps = 1.0 / dt;
         print!("\r{:.8}", fps);
-        time = end;
+        time = Instant::now();
     }
 }
