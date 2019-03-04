@@ -25,6 +25,8 @@ fn main() {
     let window = glutin::WindowBuilder::new()
         .with_title("Hello world!")
         .with_dimensions(glutin::dpi::LogicalSize::new(1024.0, 768.0));
+    //    .with_decorations(false)
+    //    .with_transparency(true);
     let context = glutin::ContextBuilder::new().with_vsync(true);
     let gl_window = glutin::GlWindow::new(window, context, &events_loop).unwrap();
 
@@ -70,7 +72,8 @@ fn main() {
     let mut mouse_delta: (f32, f32) = (0.0, 0.0);
     let mut mouse_pressed = false;
 
-    let mut dirs: Vec<Direction> = Vec::with_capacity(6);
+    // forward, backward, left, right, up, down
+    let mut dirs = [false, false, false, false, false, false];
 
     let mut running = true;
     while running {
@@ -80,83 +83,27 @@ fn main() {
                 glutin::WindowEvent::CloseRequested => running = false,
                 glutin::WindowEvent::KeyboardInput { input, .. } => {
                     if let Some(vkey) = input.virtual_keycode {
-                        if input.state == glutin::ElementState::Pressed {
-                            match vkey {
-                                glutin::VirtualKeyCode::Escape => running = false,
-                                glutin::VirtualKeyCode::W => {
-                                    if !dirs.contains(&Direction::FORWARD) {
-                                        dirs.push(Direction::FORWARD);
-                                    }
-                                }
-                                glutin::VirtualKeyCode::S => {
-                                    if !dirs.contains(&Direction::BACKWARD) {
-                                        dirs.push(Direction::BACKWARD);
-                                    }
-                                }
-                                glutin::VirtualKeyCode::A => {
-                                    if !dirs.contains(&Direction::LEFT) {
-                                        dirs.push(Direction::LEFT);
-                                    }
-                                }
-                                glutin::VirtualKeyCode::D => {
-                                    if !dirs.contains(&Direction::RIGHT) {
-                                        dirs.push(Direction::RIGHT);
-                                    }
-                                }
-                                glutin::VirtualKeyCode::Space => {
-                                    if !dirs.contains(&Direction::UP) {
-                                        dirs.push(Direction::UP);
-                                    }
-                                }
-                                glutin::VirtualKeyCode::C => {
-                                    if !dirs.contains(&Direction::DOWN) {
-                                        dirs.push(Direction::DOWN);
-                                    }
-                                }
-                                _ => {}
+                        match vkey {
+                            glutin::VirtualKeyCode::Escape => running = false,
+                            glutin::VirtualKeyCode::W => {
+                                dirs[0] = input.state == glutin::ElementState::Pressed;
                             }
-                        } else if input.state == glutin::ElementState::Released {
-                            match vkey {
-                                glutin::VirtualKeyCode::W => {
-                                    if let Some(n) =
-                                        dirs.iter().position(|x| x == &Direction::FORWARD)
-                                    {
-                                        dirs.remove(n);
-                                    }
-                                }
-                                glutin::VirtualKeyCode::S => {
-                                    if let Some(n) =
-                                        dirs.iter().position(|x| x == &Direction::BACKWARD)
-                                    {
-                                        dirs.remove(n);
-                                    }
-                                }
-                                glutin::VirtualKeyCode::A => {
-                                    if let Some(n) = dirs.iter().position(|x| x == &Direction::LEFT)
-                                    {
-                                        dirs.remove(n);
-                                    }
-                                }
-                                glutin::VirtualKeyCode::D => {
-                                    if let Some(n) =
-                                        dirs.iter().position(|x| x == &Direction::RIGHT)
-                                    {
-                                        dirs.remove(n);
-                                    }
-                                }
-                                glutin::VirtualKeyCode::Space => {
-                                    if let Some(n) = dirs.iter().position(|x| x == &Direction::UP) {
-                                        dirs.remove(n);
-                                    }
-                                }
-                                glutin::VirtualKeyCode::C => {
-                                    if let Some(n) = dirs.iter().position(|x| x == &Direction::DOWN)
-                                    {
-                                        dirs.remove(n);
-                                    }
-                                }
-                                _ => {}
+                            glutin::VirtualKeyCode::S => {
+                                dirs[1] = input.state == glutin::ElementState::Pressed;
                             }
+                            glutin::VirtualKeyCode::A => {
+                                dirs[2] = input.state == glutin::ElementState::Pressed;
+                            }
+                            glutin::VirtualKeyCode::D => {
+                                dirs[3] = input.state == glutin::ElementState::Pressed;
+                            }
+                            glutin::VirtualKeyCode::Space => {
+                                dirs[4] = input.state == glutin::ElementState::Pressed;
+                            }
+                            glutin::VirtualKeyCode::LShift => {
+                                dirs[5] = input.state == glutin::ElementState::Pressed;
+                            }
+                            _ => {}
                         }
                     }
                 }
@@ -188,8 +135,25 @@ fn main() {
             cam.move_target(mouse_delta.0, mouse_delta.1, dt as f32);
         }
 
+        /*
         for dir in dirs.iter() {
             cam.move_cam(&dir, dt as f32);
+        }
+        */
+
+        for (i, &val) in dirs.iter().enumerate() {
+            if val {
+                let dir = match i {
+                    0 => Direction::FORWARD,
+                    1 => Direction::BACKWARD,
+                    2 => Direction::LEFT,
+                    3 => Direction::RIGHT,
+                    4 => Direction::UP,
+                    5 => Direction::DOWN,
+                    _ => Direction::FORWARD,
+                };
+                cam.move_cam(&dir, dt as f32);
+            }
         }
 
         unsafe {
