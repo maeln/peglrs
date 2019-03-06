@@ -9,7 +9,7 @@ mod scene;
 mod shaders;
 mod utils;
 
-use glutin::GlContext;
+use glutin::{GlContext, GlWindow};
 use std::path::Path;
 use std::rc::Rc;
 use std::time::{Duration, Instant};
@@ -20,16 +20,34 @@ use shaders::{Program, Shader};
 use cgmath::prelude::*;
 use cgmath::{perspective, Deg, Matrix4, Point3, Vector3};
 
+fn resize_window(window: &GlWindow, projection: &mut Matrix4<f32>) {
+    let dpi = window.get_hidpi_factor();
+    let wlsize = window.get_inner_size().unwrap();
+    let wpsize = wlsize.to_physical(dpi);
+
+    unsafe {
+        gl::Viewport(0, 0, wpsize.width as i32, wpsize.height as i32);
+    }
+
+    *projection = perspective(
+        Deg(75.0),
+        wpsize.width as f32 / wpsize.height as f32,
+        0.1,
+        10.0,
+    );
+}
+
 fn main() {
     let mut events_loop = glutin::EventsLoop::new();
     let window = glutin::WindowBuilder::new()
         .with_title("Hello world!")
-        .with_dimensions(glutin::dpi::LogicalSize::new(1024.0, 768.0));
-    //    .with_decorations(false)
-    //    .with_transparency(true);
+        .with_dimensions(glutin::dpi::LogicalSize::new(1024.0, 768.0))
+        .with_decorations(true)
+        .with_transparency(false);
+    //    .with_fullscreen(Some(events_loop.get_primary_monitor()));
     let context = glutin::ContextBuilder::new().with_vsync(true);
     let gl_window = glutin::GlWindow::new(window, context, &events_loop).unwrap();
-
+    let dpi = gl_window.get_hidpi_factor();
     unsafe {
         gl_window.make_current().unwrap();
         gl::load_with(|symbol| gl_window.get_proc_address(symbol) as *const _);
@@ -43,6 +61,12 @@ fn main() {
         gl::Enable(gl::DEPTH_CLAMP);
         gl::Enable(gl::BLEND);
         gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
+        if gl_window.get_inner_size().is_some() {
+            let wlsize = gl_window.get_inner_size().unwrap();
+            let wpsize = wlsize.to_physical(dpi);
+            // TO DO: Handle dpi
+            gl::Viewport(0, 0, wpsize.width as i32, wpsize.height as i32);
+        }
     }
 
     let vertex_shader = Shader::load_shader(Path::new("data/shaders/basic/projection.vs"));
@@ -58,7 +82,13 @@ fn main() {
     cube.ready_up();
 
     let mut model = Matrix4::<f32>::identity();
-    let projection = perspective(Deg(75.0), 1024.0 / 768.0, 0.1, 10.0);
+    let wpsize = gl_window.get_inner_size().unwrap().to_physical(dpi);
+    let mut projection: Matrix4<f32> = perspective(
+        Deg(75.0),
+        wpsize.width as f32 / wpsize.height as f32,
+        0.1,
+        10.0,
+    );
     let mut cam = Camera::new(
         Point3::new(0.0, 0.0, -2.0),
         Vector3::new(0.0, 0.0, 1.0),
@@ -81,6 +111,7 @@ fn main() {
         events_loop.poll_events(|event| match event {
             glutin::Event::WindowEvent { event, .. } => match event {
                 glutin::WindowEvent::CloseRequested => running = false,
+                glutin::WindowEvent::Resized(_) => resize_window(&gl_window, &mut projection),
                 glutin::WindowEvent::KeyboardInput { input, .. } => {
                     if let Some(vkey) = input.virtual_keycode {
                         match vkey {
@@ -134,12 +165,6 @@ fn main() {
         if mouse_pressed {
             cam.move_target(mouse_delta.0, mouse_delta.1, dt as f32);
         }
-
-        /*
-        for dir in dirs.iter() {
-            cam.move_cam(&dir, dt as f32);
-        }
-        */
 
         for (i, &val) in dirs.iter().enumerate() {
             if val {
