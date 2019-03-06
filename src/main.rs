@@ -25,6 +25,7 @@ fn resize_window(window: &GlWindow, projection: &mut Matrix4<f32>) {
     let wlsize = window.get_inner_size().unwrap();
     let wpsize = wlsize.to_physical(dpi);
 
+    window.resize(wpsize);
     unsafe {
         gl::Viewport(0, 0, wpsize.width as i32, wpsize.height as i32);
     }
@@ -61,12 +62,9 @@ fn main() {
         gl::Enable(gl::DEPTH_CLAMP);
         gl::Enable(gl::BLEND);
         gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
-        if gl_window.get_inner_size().is_some() {
-            let wlsize = gl_window.get_inner_size().unwrap();
-            let wpsize = wlsize.to_physical(dpi);
-            // TO DO: Handle dpi
-            gl::Viewport(0, 0, wpsize.width as i32, wpsize.height as i32);
-        }
+        let wlsize = gl_window.get_inner_size().unwrap();
+        let wpsize = wlsize.to_physical(dpi);
+        gl::Viewport(0, 0, wpsize.width as i32, wpsize.height as i32);
     }
 
     let vertex_shader = Shader::load_shader(Path::new("data/shaders/basic/projection.vs"));
@@ -112,6 +110,9 @@ fn main() {
             glutin::Event::WindowEvent { event, .. } => match event {
                 glutin::WindowEvent::CloseRequested => running = false,
                 glutin::WindowEvent::Resized(_) => resize_window(&gl_window, &mut projection),
+                glutin::WindowEvent::HiDpiFactorChanged(_) => {
+                    resize_window(&gl_window, &mut projection)
+                }
                 glutin::WindowEvent::KeyboardInput { input, .. } => {
                     if let Some(vkey) = input.virtual_keycode {
                         match vkey {
@@ -198,7 +199,7 @@ fn main() {
         gl_window.swap_buffers().unwrap();
 
         let delta = time.elapsed();
-        dt = (delta.as_micros() as f64) / 1000000.0;
+        dt = (delta.subsec_micros() as f64) / 1_000_000.0;
         let fps = 1.0 / dt;
         print!("\r{:.8}", fps);
         time = Instant::now();
