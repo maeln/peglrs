@@ -46,7 +46,7 @@ fn main() {
         .with_decorations(true)
         .with_transparency(false);
     //    .with_fullscreen(Some(events_loop.get_primary_monitor()));
-    let context = glutin::ContextBuilder::new().with_vsync(true);
+    let context = glutin::ContextBuilder::new().with_vsync(false);
     let gl_window = glutin::GlWindow::new(window, context, &events_loop).unwrap();
     let dpi = gl_window.get_hidpi_factor();
     unsafe {
@@ -96,8 +96,9 @@ fn main() {
     let mut time = Instant::now();
     let mut dt: f64 = 0.0;
 
-    let mut mouse_pos: (f32, f32) = (0.0, 0.0);
-    let mut mouse_delta: (f32, f32) = (0.0, 0.0);
+    let mut mouse_init = false;
+    let mut mouse_prev: (f64, f64) = (0.0, 0.0);
+    let mut mouse_next: (f64, f64) = (0.0, 0.0);
     let mut mouse_pressed = false;
 
     // forward, backward, left, right, up, down
@@ -105,7 +106,6 @@ fn main() {
 
     let mut running = true;
     while running {
-        mouse_delta = (0.0, 0.0);
         events_loop.poll_events(|event| match event {
             glutin::Event::WindowEvent { event, .. } => match event {
                 glutin::WindowEvent::CloseRequested => running = false,
@@ -140,11 +140,14 @@ fn main() {
                     }
                 }
                 glutin::WindowEvent::CursorMoved { position, .. } => {
-                    mouse_delta = (
-                        mouse_pos.0 - position.x as f32,
-                        mouse_pos.1 - position.y as f32,
-                    );
-                    mouse_pos = (position.x as f32, position.y as f32);
+                    if mouse_pressed {
+                        if !mouse_init {
+                            mouse_prev = (position.x, position.y);
+                            mouse_init = true;
+                        } else {
+                            mouse_next = (position.x, position.y);
+                        }
+                    }
                 }
                 glutin::WindowEvent::MouseInput { state, button, .. } => {
                     if state == glutin::ElementState::Pressed && button == glutin::MouseButton::Left
@@ -164,7 +167,9 @@ fn main() {
         });
 
         if mouse_pressed {
-            cam.move_target(mouse_delta.0, mouse_delta.1, dt as f32);
+            let mouse_delta = (mouse_prev.0 - mouse_next.0, mouse_prev.1 - mouse_next.1);
+            cam.move_target(mouse_delta.0 as f32, mouse_delta.1 as f32, dt as f32);
+            mouse_prev = mouse_next;
         }
 
         for (i, &val) in dirs.iter().enumerate() {
@@ -201,7 +206,7 @@ fn main() {
         let delta = time.elapsed();
         dt = (delta.subsec_micros() as f64) / 1_000_000.0;
         let fps = 1.0 / dt;
-        print!("\r{:.8}", fps);
+        print!("\r{:.8}", dt);
         time = Instant::now();
     }
 }
