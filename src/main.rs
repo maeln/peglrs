@@ -1,5 +1,6 @@
 extern crate cgmath;
 extern crate gl;
+extern crate gl_loader;
 extern crate glutin;
 
 mod camera;
@@ -51,7 +52,9 @@ fn main() {
     let dpi = gl_window.get_hidpi_factor();
     unsafe {
         gl_window.make_current().unwrap();
-        gl::load_with(|symbol| gl_window.get_proc_address(symbol) as *const _);
+        println!("gl_lib: {}", gl_loader::init_gl());
+        // println!("glad: {}", gl_loader::start_glad());
+        gl::load_with(|symbol| gl_loader::get_proc_address(symbol) as *const _);
     }
 
     unsafe {
@@ -206,7 +209,7 @@ fn main() {
         let delta = time.elapsed();
         dt = (delta.subsec_micros() as f64) / 1_000_000.0;
         let fps = 1.0 / dt;
-        print!("\r{:.8}", dt);
+        print!("\r{:.8} ms", dt * 1000.0);
         time = Instant::now();
     }
 }

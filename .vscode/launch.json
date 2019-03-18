@@ -13,7 +13,6 @@
                     "build",
                     "--bin=peglrs",
                     "--package=peglrs",
-                    "--features \"debug\""
                 ],
                 "filter": {
                     "kind": "bin"
